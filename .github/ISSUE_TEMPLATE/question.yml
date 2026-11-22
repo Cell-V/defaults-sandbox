@@ -1,9 +1,0 @@
-name: Local Question
-description: Local form that verifies that local templates replace the inherited set
-body:
-  - type: textarea
-    id: question
-    attributes:
-      label: Question
-    validations:
-      required: true
