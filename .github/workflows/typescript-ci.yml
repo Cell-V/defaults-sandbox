@@ -1,0 +1,67 @@
+name: TypeScript CI
+
+# Organization CI starter for TypeScript projects that use pnpm.
+# Adopt it from the Actions tab. GitHub replaces "main" with the
+# default branch of your repository.
+#
+# Prerequisites in the adopting repository:
+#   - package.json declares pnpm in "packageManager" (for example
+#     "packageManager": "pnpm@10.12.1"). pnpm/action-setup reads the version
+#     from this field.
+#   - pnpm-lock.yaml is committed. The install fails if the lockfile does not
+#     match package.json.
+#   - Optional scripts: typecheck, lint, test, build. A missing script is
+#     skipped.
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Type-check, lint, test, and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          # Change to match your runtime, or use node-version-file: .nvmrc
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check
+        run: pnpm run --if-present typecheck
+
+      - name: Lint
+        run: pnpm run --if-present lint
+
+      - name: Test
+        run: pnpm run --if-present test
+
+      # No secrets here: this job also runs on pull_request, where the branch
+      # code controls the build script. Publish from a separate workflow that
+      # runs only on trusted events (for example a release).
+      - name: Build
+        run: pnpm run --if-present build
